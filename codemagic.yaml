@@ -1,6 +1,8 @@
 workflows:
   android-workflow:
-    name: Android Workflow
+    name: Android APK Build
+
+    instance_type: mac_mini_m2
 
     environment:
       flutter: 3.27.4
@@ -8,23 +10,34 @@ workflows:
     scripts:
       - name: Install Rust
         script: |
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source $HOME/.cargo/env
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          export PATH="$HOME/.cargo/bin:$PATH"
 
-      - name: Install Tools
-        script: |
-          cargo install cargo-make
-          cargo install cargo-lipo
+          rustc --version
+          cargo --version
 
-      - name: Flutter Dependencies
+      - name: Install Rust Tools
         script: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+
+          cargo install --force cargo-make
+          cargo install --force cargo-lipo
+          cargo install --force --locked duckscript_cli
+
+      - name: Prepare AppFlowy
+        script: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+
           cd frontend
+
           cargo make appflowy-flutter-deps-tools
 
       - name: Build APK
         script: |
           cd frontend/appflowy_flutter
+
           flutter pub get
+
           flutter build apk --debug
 
     artifacts:
